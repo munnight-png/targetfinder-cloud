@@ -1,0 +1,56 @@
+@import "tailwindcss";
+
+@layer base {
+  html, body, #root {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    position: fixed; /* 전체 페이지 스크롤 및 튀는 현상 방지 */
+  }
+  body {
+    @apply antialiased text-gray-900 bg-gray-50 font-sans;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+  }
+}
+
+/* Bottom Sheet Animation */
+.bottom-sheet-enter {
+  transform: translateY(100%);
+}
+.bottom-sheet-enter-active {
+  transform: translateY(0);
+  transition: transform 300ms ease-out;
+}
+.bottom-sheet-exit {
+  transform: translateY(0);
+}
+.bottom-sheet-exit-active {
+  transform: translateY(100%);
+  transition: transform 200ms ease-in;
+}
+
+/* Custom map marker styles */
+.custom-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  color: white;
+  font-weight: bold;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  border: 2px solid white;
+}
+.marker-exp-26 { border-color: #EF4444; } /* Red for 2026 */
+.marker-exp-27 { border-color: #F97316; } /* Orange for 2027 */
+
+@keyframes pulse-selection {
+  0% { transform: translate(-50%, -50%) scale(0.6); opacity: 0.8; }
+  100% { transform: translate(-50%, -50%) scale(1.1); opacity: 0; }
+}
+.selection-highlight { pointer-events: none; }
+

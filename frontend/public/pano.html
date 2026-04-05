@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="referrer" content="unsafe-url">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <style>
+        body, html { margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidden; background: #001122; }
+        #pano { width: 100%; height: 100%; display: block; }
+    </style>
+    <script type="text/javascript" src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=uzzst5z68n&v=3&submodules=panorama"></script>
+</head>
+<body>
+    <div id="pano"></div>
+    <script>
+        let pano = null;
+        let isReadyReported = false;
+
+        function initPano(lat, lng) {
+            const container = document.getElementById('pano');
+            if (!container || !window.naver || !window.naver.maps || !window.naver.maps.Panorama) {
+                setTimeout(() => initPano(lat, lng), 300);
+                return;
+            }
+
+            const rLat = Number(parseFloat(lat).toFixed(6));
+            const rLng = Number(parseFloat(lng).toFixed(6));
+            const pos = new naver.maps.LatLng(rLat, rLng);
+
+            if (pano) {
+                console.log('[IFRAME] Update Position:', rLat, rLng);
+                pano.setPosition(pos);
+                pano.setVisible(true);
+                pano.setSize();
+                return;
+            }
+
+            try {
+                console.log('[IFRAME] Final Production Init (DOM-Ref):', rLat, rLng);
+                pano = new naver.maps.Panorama(container, {
+                    position: pos,
+                    visible: true,
+                    aroundControl: true,
+                    flightSpot: true
+                });
+
+                naver.maps.Event.addListener(pano, 'pano_status', function(status) {
+                    console.log('[IFRAME] Status ->', status);
+                    if (status === 'OK') {
+                        pano.setVisible(true);
+                        pano.setSize();
+                        if (!isReadyReported) {
+                            window.parent.postMessage({ type: 'PANO_READY' }, '*');
+                            isReadyReported = true;
+                        }
+                    } else {
+                        window.parent.postMessage({ type: 'PANO_ERROR', message: '정보 없음' }, '*');
+                    }
+                });
+
+                naver.maps.Event.addListener(pano, 'pano_changed', function() {
+                    const p = pano.getPosition();
+                    window.parent.postMessage({ type: 'PANO_CHANGED', lat: p.lat(), lng: p.lng() }, '*');
+                });
+
+                // Frame-Sync Loop for smooth initialization
+                let startTime = Date.now();
+                function syncSize() {
+                    if (!pano) return;
+                    pano.setSize();
+                    if (Date.now() - startTime < 4000) { // 4 seconds of sync
+                        requestAnimationFrame(syncSize);
+                    }
+                }
+                syncSize();
+
+                window.addEventListener('resize', () => pano && pano.setSize());
+
+            } catch (e) {
+                console.error('[IFRAME] Engine Error:', e);
+                window.parent.postMessage({ type: 'PANO_ERROR', message: '로드뷰 엔진 오류' }, '*');
+            }
+        }
+
+        window.addEventListener('message', function(e) {
+            if (e.data.type === 'SET_POSITION') {
+                initPano(e.data.lat, e.data.lng);
+            }
+        });
+
+        window.parent.postMessage({ type: 'IFRAME_DOM_READY' }, '*');
+    </script>
+</body>
+</html>
