@@ -21,11 +21,22 @@ app.use((req, res, next) => {
   next();
 });
 
-// 🔐 Auth Middleware: Master Password Check
-const authMiddleware = (req: express.Request, res: express.Response, next: express.NextFunction) => {
-    // skip auth for login endpoint
-    if (req.path === '/login') return next();
+// 🔓 Login route MUST be registered BEFORE auth middleware
+app.post('/api/login', (req, res) => {
+    const { password } = req.body;
+    const masterPassword = (process.env.MASTER_PASSWORD || '1234').trim();
     
+    if (password === masterPassword) {
+        console.log(`[AUTH] Login Success from ${req.ip}`);
+        res.json({ success: true, message: 'Authenticated' });
+    } else {
+        console.warn(`[AUTH] Login Failed from ${req.ip}. Pwd: "${password}" (len: ${password?.length}), Expected len: ${masterPassword.length}`);
+        res.status(401).json({ success: false, message: 'Invalid Password' });
+    }
+});
+
+// 🔐 Auth Middleware: Master Password Check (applied to all OTHER /api routes)
+const authMiddleware = (req: express.Request, res: express.Response, next: express.NextFunction) => {
     const masterPassword = (process.env.MASTER_PASSWORD || '1234').trim();
     const clientAuth = req.headers['authorization'];
 
@@ -37,21 +48,8 @@ const authMiddleware = (req: express.Request, res: express.Response, next: expre
     }
 };
 
-// Apply security to all /api routes
+// Apply security to all /api routes (login is already handled above)
 app.use('/api', authMiddleware);
-
-app.post('/api/login', (req, res) => {
-    const { password } = req.body;
-    const masterPassword = (process.env.MASTER_PASSWORD || '1234').trim();
-    
-    if (password === masterPassword) {
-        console.log(`[AUTH] Login Success from ${req.ip}`);
-        res.json({ success: true, message: 'Authenticated' });
-    } else {
-        console.warn(`[AUTH] Login Failed from ${req.ip}. Pwd: ${password} (len: ${password?.length}), Expected len: ${masterPassword.length}`);
-        res.status(401).json({ success: false, message: 'Invalid Password' });
-    }
-});
 
 async function startServer() {
   try {
