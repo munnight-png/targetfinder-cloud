@@ -1,6 +1,6 @@
-FROM node:20-slim
+FROM node:20
 
-# Install build tools needed for better-sqlite3
+# Install build tools needed for native modules
 RUN apt-get update && apt-get install -y \
     python3 \
     make \
@@ -9,11 +9,11 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
-# Copy package files and install dependencies
+# Copy package files and install dependencies fresh (Linux native build)
 COPY package*.json ./
-RUN npm install
+RUN npm install --build-from-source
 
-# Copy source files
+# Copy source files (node_modules excluded via .dockerignore)
 COPY . .
 
 EXPOSE 3001
