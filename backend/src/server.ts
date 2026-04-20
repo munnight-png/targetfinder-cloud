@@ -56,39 +56,7 @@ const authMiddleware = (req: express.Request, res: express.Response, next: expre
 // Apply security to all /api routes (login is already handled above)
 app.use('/api', authMiddleware);
 
-async function startServer() {
-  try {
-    console.log('[SYSTEM] Starting server sequence...');
-    await initDb();
-    console.log('[SYSTEM] Database initialized.');
-    
-    // Migration
-    await runQuery('UPDATE convenience_stores SET origin_lat = lat, origin_lng = lng WHERE origin_lat IS NULL');
-    await runQuery('UPDATE tobacco_shops SET origin_lat = lat, origin_lng = lng WHERE origin_lat IS NULL');
-
-    // Serve
-    const port = process.env.PORT || 3001;
-    const server = app.listen(Number(port), '0.0.0.0', () => {
-      console.log('--------------------------------------------------');
-      console.log(`🚀 BACKEND RUNNING AT http://0.0.0.0:${port} (Ver 1.1)`);
-      console.log('--------------------------------------------------');
-    });
-
-    server.on('error', (err: any) => {
-      if (err.code === 'EADDRINUSE') {
-        console.error('❌ PORT 3001 IS ALREADY IN USE! Please kill existing node processes.');
-        process.exit(1);
-      }
-    });
-
-    // Background task
-    initRoadGraph().catch(e => console.error('[GIS] Background init failed:', e.message));
-
-  } catch (err: any) {
-    console.error('❌ CRITICAL STARTUP ERROR:', err.message);
-    process.exit(1);
-  }
-}
+// Server initialization logic handled at the end
 
 process.on('unhandledRejection', (reason, promise) => {
   console.error('Unhandled Rejection at:', promise, 'reason:', reason);
@@ -518,25 +486,42 @@ app.post('/api/entities/toggle-target', async (req, res) => {
     res.json({ success: true });
 });
 
+// 🌐 Static File Serving & Fallback (Restore April 4th logic)
+const publicPath = path.join(__dirname, '../public'); 
+console.log(`[SYSTEM] Attempting to serve static files from: ${publicPath}`);
+
+app.use(express.static(publicPath));
+
+// Unified Catch-all for SPA: Middleware based to avoid Express 5 path errors
+app.use((req, res, next) => {
+    if (req.path.startsWith('/api') || req.path.includes('.')) {
+        return next();
+    }
+    res.sendFile(path.join(publicPath, 'index.html'));
+});
+
 const port = Number(process.env.PORT) || 3001;
 
 async function startServer() {
-    console.log(`[SYSTEM] Starting Unified Server...`);
+    console.log(`[SYSTEM] Starting Unified Server (Version 1.2)...`);
     
     try {
         console.log(`[SYSTEM] Initializing Database...`);
-        await initDb().catch(e => console.error('[DB] Failed to init DB:', e));
+        await initDb();
         
-        console.log(`[SYSTEM] Initializing GIS Data (Road Graph)...`);
-        await initRoadGraph().catch(e => console.error('[GIS] Failed to init Road Graph:', e));
+        // Migration logic
+        await runQuery('UPDATE convenience_stores SET origin_lat = lat, origin_lng = lng WHERE origin_lat IS NULL').catch(() => {});
+        await runQuery('UPDATE tobacco_shops SET origin_lat = lat, origin_lng = lng WHERE origin_lat IS NULL').catch(() => {});
+
+        console.log(`[SYSTEM] Initializing GIS Data...`);
+        initRoadGraph().catch(e => console.error('[GIS] Background init failed:', e.message));
     } catch (err) {
-        console.error('[SYSTEM] Critical Initialization Error (Server will still try to start):', err);
+        console.error('[SYSTEM] Initialization Warning:', err);
     }
 
     app.listen(port, '0.0.0.0', () => {
         console.log(`[SYSTEM] ==========================================`);
         console.log(`[SYSTEM] Unified Server running on port ${port}`);
-        console.log(`[SYSTEM] Time: ${new Date().toLocaleString('ko-KR')}`);
         console.log(`[SYSTEM] ==========================================`);
     });
 }
