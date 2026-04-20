@@ -524,9 +524,9 @@ console.log(`[SYSTEM] Attempting to serve static files from: ${publicPath}`);
 
 app.use(express.static(publicPath));
 
-// Unified Catch-all for SPA
-app.get('(.*)', (req, res, next) => {
-    if (req.path.startsWith('/api')) {
+// Unified Catch-all for SPA: Using middleware instead of path string to avoid Express 5 errors
+app.use((req, res, next) => {
+    if (req.path.startsWith('/api') || req.path.includes('.')) {
         return next();
     }
     res.sendFile(path.join(publicPath, 'index.html'));
