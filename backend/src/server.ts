@@ -525,7 +525,7 @@ console.log(`[SYSTEM] Attempting to serve static files from: ${publicPath}`);
 app.use(express.static(publicPath));
 
 // Unified Catch-all for SPA
-app.get('*', (req, res, next) => {
+app.get('(.*)', (req, res, next) => {
     if (req.path.startsWith('/api')) {
         return next();
     }
