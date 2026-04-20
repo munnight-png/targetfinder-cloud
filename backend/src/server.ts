@@ -519,7 +519,7 @@ const publicPath = path.join(__dirname, '../public');
 app.use(express.static(publicPath));
 
 // Unified Catch-all for SPA: Serve index.html for any route not starting with /api
-app.get('(.*)', (req, res, next) => {
+app.use((req, res, next) => {
     if (req.path.startsWith('/api')) {
         return next();
     }
