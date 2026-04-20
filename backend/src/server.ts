@@ -22,6 +22,10 @@ app.use((req, res, next) => {
   next();
 });
 
+app.get('/api/test', (req, res) => {
+    res.json({ success: true, message: 'API Server is Up', time: new Date().toISOString() });
+});
+
 // 🔓 Login route MUST be registered BEFORE auth middleware
 app.post('/api/login', (req, res) => {
     const { password } = req.body;

@@ -19,15 +19,17 @@ const Login: React.FC = () => {
 
     try {
       const VITE_API_URL = import.meta.env.VITE_API_URL;
-      const BASE_URL = VITE_API_URL !== undefined && VITE_API_URL !== null ? VITE_API_URL : `http://${window.location.hostname}:3001`;
+      const BASE_URL = VITE_API_URL && VITE_API_URL.startsWith('http') ? VITE_API_URL : (VITE_API_URL || '');
       const loginUrl = `${BASE_URL.replace(/\/$/, '')}/api/login`;
+      
       const response = await axios.post(loginUrl, { password });
       
       if (response.data.success) {
         setAuthorized(true, password);
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || '비밀번호가 일치하지 않습니다.');
+      const detail = err.response?.data?.message || err.message;
+      setError(`로그인 실패: ${detail}`);
     } finally {
       setLoading(false);
     }

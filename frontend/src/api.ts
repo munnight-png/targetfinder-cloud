@@ -2,8 +2,8 @@ import axios from 'axios';
 import { useStore } from './store';
 
 const VITE_API_URL = import.meta.env.VITE_API_URL;
-const BASE_URL = VITE_API_URL !== undefined && VITE_API_URL !== null ? VITE_API_URL : `http://${window.location.hostname}:3001`;
-// Ensure no double slashes when joining
+// In production, always use relative paths if not explicitly set to a full URL
+const BASE_URL = VITE_API_URL && VITE_API_URL.startsWith('http') ? VITE_API_URL : (VITE_API_URL || '');
 const API_URL = `${BASE_URL.replace(/\/$/, '')}/api`;
 
 // 🔐 Inject Master Password into every request
