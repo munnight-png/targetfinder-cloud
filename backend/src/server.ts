@@ -29,7 +29,7 @@ app.get('/api/test', (req, res) => {
 // 🔓 Login route MUST be registered BEFORE auth middleware
 app.post('/api/login', (req, res) => {
     const { password } = req.body;
-    const masterPassword = (process.env.MASTER_PASSWORD || '1234').trim();
+    const masterPassword = (process.env.MASTER_PASSWORD || '0421!!').trim();
     
     if (password === masterPassword) {
         console.log(`[AUTH] Login Success from ${req.ip}`);
@@ -42,13 +42,13 @@ app.post('/api/login', (req, res) => {
 
 // 🔐 Auth Middleware: Master Password Check (applied to all OTHER /api routes)
 const authMiddleware = (req: express.Request, res: express.Response, next: express.NextFunction) => {
-    const masterPassword = (process.env.MASTER_PASSWORD || '1234').trim();
+    const masterPassword = (process.env.MASTER_PASSWORD || '0421!!').trim();
     const clientAuth = req.headers['authorization'];
 
     if (clientAuth === masterPassword) {
         next();
     } else {
-        console.warn(`[AUTH] Unauthorized access attempt from ${req.ip}. Expected length: ${masterPassword.length}, Received length: ${clientAuth?.length || 0}`);
+        console.warn(`[AUTH] Unauthorized access attempt from ${req.ip}. Client Header: "${clientAuth?.substring(0, 2)}..." (len: ${clientAuth?.length || 0}), Expected len: ${masterPassword.length}`);
         res.status(401).json({ error: 'Unauthorized: Invalid Master Password' });
     }
 };
