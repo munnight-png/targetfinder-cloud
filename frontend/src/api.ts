@@ -1,8 +1,10 @@
 import axios from 'axios';
 import { useStore } from './store';
 
-const BASE_URL = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:3001`;
-const API_URL = `${BASE_URL}/api`;
+const VITE_API_URL = import.meta.env.VITE_API_URL;
+const BASE_URL = VITE_API_URL !== undefined && VITE_API_URL !== null ? VITE_API_URL : `http://${window.location.hostname}:3001`;
+// Ensure no double slashes when joining
+const API_URL = `${BASE_URL.replace(/\/$/, '')}/api`;
 
 // 🔐 Inject Master Password into every request
 axios.interceptors.request.use((config) => {

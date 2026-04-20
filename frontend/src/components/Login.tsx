@@ -18,8 +18,10 @@ const Login: React.FC = () => {
     setError('');
 
     try {
-      const BASE_URL = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:3001`;
-      const response = await axios.post(`${BASE_URL}/api/login`, { password });
+      const VITE_API_URL = import.meta.env.VITE_API_URL;
+      const BASE_URL = VITE_API_URL !== undefined && VITE_API_URL !== null ? VITE_API_URL : `http://${window.location.hostname}:3001`;
+      const loginUrl = `${BASE_URL.replace(/\/$/, '')}/api/login`;
+      const response = await axios.post(loginUrl, { password });
       
       if (response.data.success) {
         setAuthorized(true, password);
