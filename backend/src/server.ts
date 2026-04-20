@@ -16,9 +16,9 @@ const app = express();
 app.use(cors()); // 운영 환경 배포를 위해 모든 도메인 허용
 app.use(express.json());
 
-// Request Logger Middleware
+// Request Logger Middleware (Enhanced)
 app.use((req, res, next) => {
-  console.log(`[API] ${req.method} ${req.url} - ${new Date().toLocaleTimeString()}`);
+  console.log(`[API] ${req.method} ${req.url} - Auth: ${req.headers['authorization'] ? 'Yes' : 'No'}`);
   next();
 });
 
@@ -518,7 +518,11 @@ app.post('/api/entities/toggle-target', async (req, res) => {
 const publicPath = path.join(__dirname, '../public');
 app.use(express.static(publicPath));
 
-app.get(/[^(api)]/, (req, res) => {
+// Unified Catch-all for SPA: Serve index.html for any route not starting with /api
+app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api')) {
+        return next();
+    }
     res.sendFile(path.join(publicPath, 'index.html'));
 });
 
