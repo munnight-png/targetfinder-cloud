@@ -1,0 +1,13 @@
+node_modules
+.env
+.env.*
+!.env.example
+dist
+backend/dist
+frontend/dist
+.DS_Store
+*.local
+db.sqlite
+*.log
+.vscode
+.idea
