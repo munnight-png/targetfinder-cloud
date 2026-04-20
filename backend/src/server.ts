@@ -1,4 +1,5 @@
 import express from 'express';
+import path from 'path';
 import cors from 'cors';
 import { initDb, getQuery, runQuery } from './database';
 import { 
@@ -50,6 +51,17 @@ const authMiddleware = (req: express.Request, res: express.Response, next: expre
 
 // Apply security to all /api routes (login is already handled above)
 app.use('/api', authMiddleware);
+
+// 🌐 Static File Serving: Serve frontend files from /public directory
+const publicPath = path.join(__dirname, '../public');
+app.use(express.static(publicPath));
+
+// 🔄 Fallback: Route all non-API paths to index.html (SPA support)
+app.get('*', (req, res) => {
+    if (!req.path.startsWith('/api')) {
+        res.sendFile(path.join(publicPath, 'index.html'));
+    }
+});
 
 async function startServer() {
   try {
