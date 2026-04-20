@@ -52,17 +52,6 @@ const authMiddleware = (req: express.Request, res: express.Response, next: expre
 // Apply security to all /api routes (login is already handled above)
 app.use('/api', authMiddleware);
 
-// 🌐 Static File Serving: Serve frontend files from /public directory
-const publicPath = path.join(__dirname, '../public');
-app.use(express.static(publicPath));
-
-// 🔄 Fallback: Route all non-API paths to index.html (SPA support)
-app.get('(.*)', (req, res) => {
-    if (!req.path.startsWith('/api')) {
-        res.sendFile(path.join(publicPath, 'index.html'));
-    }
-});
-
 async function startServer() {
   try {
     console.log('[SYSTEM] Starting server sequence...');
@@ -105,7 +94,7 @@ process.on('uncaughtException', (err) => {
   console.error('Uncaught Exception thrown:', err.message);
 });
 
-startServer();
+// startServer() call moved to the end
 
 // API Routes
 
@@ -524,3 +513,13 @@ app.post('/api/entities/toggle-target', async (req, res) => {
     await runQuery(`UPDATE ${table} SET is_target = ? WHERE id = ?`, [is_target ? 1 : 0, id]);
     res.json({ success: true });
 });
+
+// 🌐 Static File Serving & Fallback (MUST be at the end)
+const publicPath = path.join(__dirname, '../public');
+app.use(express.static(publicPath));
+
+app.get(/[^(api)]/, (req, res) => {
+    res.sendFile(path.join(publicPath, 'index.html'));
+});
+
+startServer();
