@@ -519,15 +519,27 @@ app.post('/api/entities/toggle-target', async (req, res) => {
 });
 
 // 🌐 Static File Serving & Fallback (MUST be at the end)
-const publicPath = path.join(__dirname, '../public');
-app.use(express.static(publicPath));
+const publicPath = path.resolve(__dirname, '../../public'); // Docker context: /app/public
+if (require('fs').existsSync(publicPath)) {
+    console.log(`[SYSTEM] Public path found: ${publicPath}`);
+    console.log(`[SYSTEM] Files in public: ${require('fs').readdirSync(publicPath).join(', ')}`);
+} else {
+    console.warn(`[SYSTEM] PUBLIC PATH NOT FOUND: ${publicPath}`);
+    // Try fallback for different build contexts
+    const altPath = path.resolve(__dirname, '../public');
+    console.log(`[SYSTEM] Trying alt path: ${altPath}`);
+    if (require('fs').existsSync(altPath)) console.log(`[SYSTEM] Alt path files: ${require('fs').readdirSync(altPath).join(', ')}`);
+}
 
-// Unified Catch-all for SPA: Serve index.html for any route not starting with /api
+app.use(express.static(publicPath));
+app.use(express.static(path.resolve(__dirname, '../public'))); // Extra insurance
+
+// Unified Catch-all for SPA: Serve index.html for any route not starting with /api and not a file
 app.use((req, res, next) => {
-    if (req.path.startsWith('/api')) {
+    if (req.path.startsWith('/api') || req.path.includes('.')) {
         return next();
     }
-    res.sendFile(path.join(publicPath, 'index.html'));
+    res.sendFile(path.join(require('fs').existsSync(publicPath) ? publicPath : path.resolve(__dirname, '../public'), 'index.html'));
 });
 
 startServer();
