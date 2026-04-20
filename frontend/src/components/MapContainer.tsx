@@ -365,7 +365,9 @@ const MapContainer = () => {
             if (item) {
                 const isTargeted = item.is_target === 1;
                 const isClosed = (item.name || '').includes('폐점');
-                if (!isClosed && (type === 'store' || brandCode)) {
+                if (type === 'target') {
+                    shouldShow = showTargets;
+                } else if (!isClosed && (type === 'store' || brandCode)) {
                     shouldShow = showStores || (isTargeted && showTargets);
                 } else {
                     shouldShow = showTobacco || (isTargeted && showTargets);
@@ -380,7 +382,9 @@ const MapContainer = () => {
             const isTargeted = item.is_target === 1;
             const isClosed = (item.name || '').includes('폐점');
             let visible = false;
-            if (!isClosed && (type === 'store' || brandCode)) {
+            if (type === 'target') {
+                visible = showTargets;
+            } else if (!isClosed && (type === 'store' || brandCode)) {
                 visible = showStores || (isTargeted && showTargets);
             } else {
                 visible = showTobacco || (isTargeted && showTargets);
