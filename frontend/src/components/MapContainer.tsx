@@ -185,8 +185,9 @@ const MapContainer = () => {
 
 
   const initMap = () => {
-    if (!containerRef.current || !window.naver) return;
+    if (!containerRef.current || !window.naver || mapRef.current) return;
     const naver = window.naver;
+    console.log('[SYSTEM] Initializing Naver Map for the first time...');
     const map = new naver.maps.Map(containerRef.current, { center: new naver.maps.LatLng(37.738, 127.033), zoom: 15, zoomControl: false, mapTypeControl: false });
     mapRef.current = map;
     containerRef.current.style.touchAction = 'none';
