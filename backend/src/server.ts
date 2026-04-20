@@ -518,18 +518,27 @@ app.post('/api/entities/toggle-target', async (req, res) => {
     res.json({ success: true });
 });
 
-// 🌐 Static File Serving & Fallback (Reverted to stable April 4th logic)
-const publicPath = path.join(__dirname, '../public'); 
-console.log(`[SYSTEM] Attempting to serve static files from: ${publicPath}`);
+const port = Number(process.env.PORT) || 3001;
 
-app.use(express.static(publicPath));
-
-// Unified Catch-all for SPA: Using middleware instead of path string to avoid Express 5 errors
-app.use((req, res, next) => {
-    if (req.path.startsWith('/api') || req.path.includes('.')) {
-        return next();
+async function startServer() {
+    console.log(`[SYSTEM] Starting Unified Server...`);
+    
+    try {
+        console.log(`[SYSTEM] Initializing Database...`);
+        await initDb().catch(e => console.error('[DB] Failed to init DB:', e));
+        
+        console.log(`[SYSTEM] Initializing GIS Data (Road Graph)...`);
+        await initRoadGraph().catch(e => console.error('[GIS] Failed to init Road Graph:', e));
+    } catch (err) {
+        console.error('[SYSTEM] Critical Initialization Error (Server will still try to start):', err);
     }
-    res.sendFile(path.join(publicPath, 'index.html'));
-});
+
+    app.listen(port, '0.0.0.0', () => {
+        console.log(`[SYSTEM] ==========================================`);
+        console.log(`[SYSTEM] Unified Server running on port ${port}`);
+        console.log(`[SYSTEM] Time: ${new Date().toLocaleString('ko-KR')}`);
+        console.log(`[SYSTEM] ==========================================`);
+    });
+}
 
 startServer();
